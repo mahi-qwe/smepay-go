@@ -33,6 +33,9 @@ type Config struct {
 // Client calls the SMEPay External API. It is safe for concurrent use;
 // create one and reuse it.
 type Client struct {
+	// Payment holds the payment calls: Create → Initiate → GetStatus.
+	Payment *PaymentService
+
 	environment Environment
 	api         *apiClient
 }
@@ -58,7 +61,8 @@ func New(cfg Config) (*Client, error) {
 		return nil, invalidConfig(fmt.Sprintf("Environment must be smepay.Test or smepay.Live, got %q", string(env)))
 	}
 
-	return &Client{environment: env, api: newAPIClient(baseURL, clientID, clientSecret)}, nil
+	api := newAPIClient(baseURL, clientID, clientSecret)
+	return &Client{Payment: &PaymentService{api: api}, environment: env, api: api}, nil
 }
 
 // Environment reports which SMEPay environment the client uses.
